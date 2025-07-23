@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #9face6);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      width: 400px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transition: all 0.4s ease;
+    }
+    h1, h2, h3 {
+      text-align: center;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    ul li {
+      background: #e0e0e0;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    ul li:hover {
+      background: #d5d5d5;
+    }
+    ul li.selected {
+      background-color: #87cefa;
+    }
+    #timer {
+      text-align: right;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #444;
+    }
+    .hide {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="welcome-box">
+    <h1>🧠 Welcome to the Quiz</h1>
+    <p style="text-align: center;">Test your knowledge with quick questions.</p>
+    <button onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <div class="container hide" id="quiz-box">
+    <div id="timer">Time Left: <span id="time">30</span>s</div>
+    <h2 id="question">Question appears here...</h2>
+    <ul id="options"></ul>
+    <button id="nextBtn">Next</button>
+  </div>
+
+  <div class="container hide" id="result-box">
+    <h2>Your Score: <span id="score"></span></h2>
+    <h3>🏆 High Scores</h3>
+    <ul id="highScores"></ul>
+    <button onclick="location.reload()">Restart</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "Which language runs in the browser?",
+        options: ["Python", "Java", "C++", "JavaScript"],
+        correct: 3
+      },
+      {
+        question: "What does CSS stand for?",
+        options: ["Color Style Sheet", "Cascading Style Sheet", "Creative Style Syntax", "Computer Style System"],
+        correct: 1
+      },
+      {
+        question: "What year was JavaScript created?",
+        options: ["1995", "2000", "1989", "1998"],
+        correct: 0
+      }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let timer = 30;
+    let interval;
+    let selected = null;
+
+    const welcomeBox = document.getElementById("welcome-box");
+    const quizBox = document.getElementById("quiz-box");
+    const resultBox = document.getElementById("result-box");
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("nextBtn");
+    const timeEl = document.getElementById("time");
+    const scoreEl = document.getElementById("score");
+    const highScoresEl = document.getElementById("highScores");
+
+    function startQuiz() {
+      welcomeBox.classList.add("hide");
+      quizBox.classList.remove("hide");
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = questions[currentQ];
+      questionEl.innerText = q.question;
+      optionsEl.innerHTML = "";
+
+      q.options.forEach((opt, i) => {
+        const li = document.createElement("li");
+        li.innerText = opt;
+        li.onclick = () => selectOption(i, li);
+        optionsEl.appendChild(li);
+      });
+
+      timer = 30;
+      timeEl.innerText = timer;
+      clearInterval(interval);
+      interval = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      timer--;
+      timeEl.innerText = timer;
+      if (timer <= 0) {
+        clearInterval(interval);
+        nextQuestion();
+      }
+    }
+
+    function selectOption(i, li) {
+      selected = i;
+      document.querySelectorAll("#options li").forEach(el => el.classList.remove("selected"));
+      li.classList.add("selected");
+    }
+
+    nextBtn.onclick = nextQuestion;
+
+    function nextQuestion() {
+      clearInterval(interval);
+      if (selected === questions[currentQ].correct) score++;
+      selected = null;
+
+      if (currentQ + 1 < questions.length) {
+        currentQ++;
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      quizBox.classList.add("hide");
+      resultBox.classList.remove("hide");
+      scoreEl.innerText = score;
+
+      const scores = JSON.parse(localStorage.getItem("quizScores")) || [];
+      scores.push(score);
+      const topScores = scores.sort((a, b) => b - a).slice(0, 5);
+      localStorage.setItem("quizScores", JSON.stringify(topScores));
+
+      highScoresEl.innerHTML = topScores.map(s => `<li>${s}</li>`).join('');
+    }
+  </script>
+
+</body>
+</html>
